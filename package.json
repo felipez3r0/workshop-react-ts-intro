@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=16 <20"
   },
   "dependencies": {
     "@chakra-ui/react": "^2.8.0",

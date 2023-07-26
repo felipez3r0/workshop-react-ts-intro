@@ -738,3 +738,10 @@ A pasta `dist` vai conter os arquivos necessários para o deploy
 Vamos escolher a opção `Static Site` e selecionar a pasta `dist` para realizar o deploy
 
 Lembrando que precisamos definir as variáveis de ambiente para a url da API ou então alterar no arquivo `api.ts`
+
+Para garantir que o Render vai utilizar a versão certa do Node precisamos adicionar no arquivo `package.json` a seguinte configuração
+```json
+"engines": {
+  "node": ">=16 <20"
+}
+```
