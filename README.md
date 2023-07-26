@@ -8,6 +8,7 @@ Para visualizar o projeto navegue pelas branchs que representam cada etapa do de
 ## Etapas
 
 - [Etapa 1 - Configuração do projeto](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa1-configuracao)
+- [Etapa 2 - Organizando o projeto](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa2-organizando)
 
 ## Passo a passo
 
