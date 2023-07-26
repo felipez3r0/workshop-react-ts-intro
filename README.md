@@ -12,6 +12,7 @@ Para visualizar o projeto navegue pelas branchs que representam cada etapa do de
 - [Etapa 3 - Criando o Header](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa3-header)
 - [Etapa 4 - Listando as tasks da API](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa4-listando-tasks)
 - [Etapa 5 - Criando o CRUD para as tasks](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa5-crud-task)
+- [Etapa 6 - Deploy](#etapa-6---deploy)
 
 ## Passo a passo
 
@@ -724,3 +725,16 @@ export default function TaskItem({ task }: TaskItemProps) {
 ```
 
 Com isso nosso CRUD básico fica completo, ainda podemos realizar alguns ajustes visuais e melhorar a aplicação
+
+
+### Etapa 6 - Deploy
+
+Vamos utilizar o Render para realizar o deploy da aplicação, primeiro precisamos testar o build do projeto
+```bash
+yarn build
+```
+
+A pasta `dist` vai conter os arquivos necessários para o deploy
+Vamos escolher a opção `Static Site` e selecionar a pasta `dist` para realizar o deploy
+
+Lembrando que precisamos definir as variáveis de ambiente para a url da API ou então alterar no arquivo `api.ts`
