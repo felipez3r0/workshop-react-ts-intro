@@ -10,6 +10,7 @@ Para visualizar o projeto navegue pelas branchs que representam cada etapa do de
 - [Etapa 1 - Configuração do projeto](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa1-configuracao)
 - [Etapa 2 - Organizando o projeto](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa2-organizando)
 - [Etapa 3 - Criando o Header](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa3-header)
+- [Etapa 4 - Listando as tasks da API](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa4-listando-tasks)
 
 ## Passo a passo
 
@@ -220,6 +221,76 @@ export default function About() {
     <Header />
     <Container>
       <h1>About</h1>
+    </Container>
+    </>
+  )
+}
+```
+
+### Etapa 4 - Listando as tasks da API
+
+Vamos começar instalando as dependências necessárias para a comunicação com a API
+```bash
+yarn add axios
+```
+
+Vamos criar uma pasta config na raiz do projeto e dentro dela vamos criar o arquivo `api.ts`
+```ts
+import axios from "axios"
+
+const api = axios.create({
+  baseURL: "http://localhost:3001" // url da api - aqui podemos utilizar variáveis de ambiente para definir a url
+})
+
+export default api
+```
+
+Agora vamos criar o hook `useTasks` na pasta `hooks`
+```tsx
+import { useEffect, useState } from "react"
+
+import api from "../config/api"
+
+interface Task {
+  id: number
+  title: string
+  description: string
+  completed: boolean
+}
+
+export default function useTasks() {
+  const [tasks, setTasks] = useState<Task[]>([]) // definindo o estado inicial como um array vazio
+
+  useEffect(() => { // hook de efeito para executar uma função quando o componente for montado
+    api.get("/task").then((response) => {
+      setTasks(response.data) // atualizando o estado com os dados da api
+    })
+  }, [])
+
+  return { tasks }
+}
+```
+
+Agora vamos importar o hook `useTasks` no arquivo `index.tsx` da Home
+```tsx
+import { Container } from "@chakra-ui/layout"
+import Header from "../../components/header"
+
+import useTasks from "../../hooks/useTasks"
+
+export default function Home() {
+  const { tasks } = useTasks()
+
+  return (
+    <>
+    <Header />
+    <Container>
+      <h1>Home</h1>
+      <ul>
+        {tasks.map((task) => ( // percorrendo o array de tasks e renderizando cada uma delas
+          <li key={task.id}>{task.title}</li> // definindo a key como o id da task
+        ))}
+      </ul>
     </Container>
     </>
   )
