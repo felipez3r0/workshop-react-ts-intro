@@ -8,6 +8,7 @@ Para visualizar o projeto navegue pelas branchs que representam cada etapa do de
 ## Etapas
 
 - [Etapa 1 - Configuração do projeto](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa1-configuracao)
+- [Etapa 2 - Organizando o projeto](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa2-organizando)
 
 ## Passo a passo
 
@@ -60,3 +61,92 @@ Podemos testar a aplicação com o comando
 ```bash
 yarn dev
 ```
+
+### Etapa 2 - Organizando o projeto
+
+Vamos criar a estrutura de pastas do projeto
+```
+src
+├── assets
+├── components
+├── hooks
+├── pages
+│   └── home
+│       └── index.tsx
+│   └── about
+│       └── index.tsx
+├── styles
+└── main.tsx
+```
+
+Vamos utilizar o Chackra UI para estilizar a aplicação, para isso vamos instalar as dependências
+```bash
+yarn add @chakra-ui/react @emotion/react @emotion/styled framer-motion
+```
+
+Para o roteamento da aplicação vamos utilizar o React Router
+```bash
+yarn add react-router-dom
+```
+
+No arquivo `main.tsx` vamos adicionar o seguinte código
+```tsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { ChakraProvider } from "@chakra-ui/react" // importando o tema do Chakra UI
+
+import {RouterProvider} from "react-router-dom" // importando o provider do React Router
+
+import routes from "./routes" // arquivo que contém as rotas da aplicação
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ChakraProvider>
+      <RouterProvider router={routes} />    
+    </ChakraProvider>
+  </React.StrictMode>,
+)
+```
+
+Na pasta `pages` vamos criar os arquivos `index.tsx` para Home e About
+```tsx
+export default function Home() {
+  return (
+    <div>
+      <h1>Home</h1>
+    </div>
+  )
+}
+```
+
+```tsx
+export default function About() {
+  return (
+    <div>
+      <h1>About</h1>
+    </div>
+  )
+}
+```
+
+No arquivo `routes.tsx` vamos adicionar o seguinte código
+```tsx
+import {createBrowserRouter} from "react-router-dom"
+import Home from "../pages/home"
+import About from "../pages/about"
+
+const routes = createBrowserRouter([
+  {
+    path: "/",
+    element: <Home />
+  },
+  {
+    path: "/about",
+    element: <About />
+  }
+])
+
+export default routes
+```
+
+Isso vai fornecer as configurações básicas para começarmos a desenvolver a aplicação
