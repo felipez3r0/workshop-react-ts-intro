@@ -11,6 +11,7 @@ Para visualizar o projeto navegue pelas branchs que representam cada etapa do de
 - [Etapa 2 - Organizando o projeto](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa2-organizando)
 - [Etapa 3 - Criando o Header](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa3-header)
 - [Etapa 4 - Listando as tasks da API](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa4-listando-tasks)
+- [Etapa 5 - Criando o CRUD para as tasks](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa5-crud-task)
 
 ## Passo a passo
 
@@ -296,3 +297,430 @@ export default function Home() {
   )
 }
 ```
+
+### Etapa 5 - Criando o CRUD para as tasks
+
+Para facilitar a utilização de formulários e validar os dados vamos utilizar o react-hook-form
+```bash
+yarn add react-hook-form
+```
+
+Para ajudar com o processo de realizar as requisições vamos utilizar o react-query
+```bash
+yarn add react-query
+```
+
+Vamos criar uma pasta interfaces na raiz do projeto e dentro dela vamos criar o arquivo `task.ts`
+```ts
+export interface Task {
+  id: number
+  title: string
+  completed: boolean
+}
+```
+
+Na pasta hooks vamos separar em duas subpastas, uma para queries e outra para mutations
+```
+hooks
+├── mutations
+│   └── mutationTasks.ts
+├── queries
+│   └── useTasks.ts
+```
+
+No arquivo de queries vamos ajustar o hook `useTasks` para utilizar o react-query
+```tsx
+import api from "../../config/api"
+import { Task } from "../../interfaces/task"
+import { useQuery } from 'react-query'
+
+const fetchTasks = () => api.get<Task[]>("/task")
+
+export const useTasks = () => {
+  return useQuery(['tasks'], () => fetchTasks(), {
+    onError: (error) => {
+      console.log(error)
+    },
+    select: (response) => response.data
+  })
+}
+```
+
+Vamos adicionar o QueryClient no arquivo `main.tsx`
+```tsx
+import { QueryClient, QueryClientProvider } from 'react-query'
+const queryClient = new QueryClient()
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ChakraProvider>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={routes} />    
+    </QueryClientProvider>
+    </ChakraProvider>
+  </React.StrictMode>,
+)
+```
+
+Agora vamos adicionar na Home a chamada para o useTasks alterado
+```tsx
+import { Container } from "@chakra-ui/layout"
+import Header from "../../components/header"
+
+import {useTasks} from "../../hooks/queries/useTasks"
+import { Task } from "../../interfaces/task"
+
+export default function Home() {
+  const { data: tasks } = useTasks()
+
+  return (
+    <>
+    <Header />
+    <Container>
+      <h1>Home</h1>
+      <ul>
+        {tasks?.map((task: Task) => (
+          <li key={task.id}>{task.title}</li>
+        ))}
+      </ul>
+    </Container>
+    </>
+  )
+}
+```
+
+Agora vamos criar o hook `mutationTask` na pasta `mutations`
+```tsx
+import api from "../../config/api"
+import { useMutation, useQueryClient } from 'react-query'
+
+import { Task } from "../../interfaces/task"
+
+const createTask = (task: Task) => api.post<Task>("/task", task)
+
+export const useCreateTask = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation((task: Task) => createTask(task), {
+    onSuccess: () => {
+      queryClient.invalidateQueries('tasks')
+    }
+  })
+}
+```
+
+Na Home vamos adicionar um formulário para criar uma nova task
+```tsx
+import { Box, Container, Flex, Heading } from "@chakra-ui/layout"
+import Header from "../../components/header"
+
+import { useTasks } from "../../hooks/queries/useTasks"
+import { Task } from "../../interfaces/task"
+import { Input } from "@chakra-ui/input"
+import { Checkbox } from "@chakra-ui/checkbox"
+import { Button } from "@chakra-ui/button"
+import { useForm } from 'react-hook-form'
+import { useCreateTask } from "../../hooks/mutations/mutationTasks"
+
+export default function Home() {
+  const { data: tasks } = useTasks()
+  interface TaskForm {
+    title: string
+    completed: boolean
+  }
+
+  const {
+    reset,
+    register,
+    handleSubmit
+  } = useForm<TaskForm>()
+
+  const { mutate, isLoading, isError } = useCreateTask()
+
+  const onSubmit = async (data: TaskForm) => {
+    mutate({
+      title: data.title,
+      completed: data.completed
+    })
+    if (!isError) {
+      reset()
+    }
+  }
+
+  return (
+    <>
+      <Header />
+      <Container>
+        <Heading mt={5}>
+          Lista de tasks
+        </Heading>
+        <hr />
+        <Box my={3}>
+          <Heading size="md" mt={3}>
+            Inserir nova task
+          </Heading>
+
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Flex gap={3}>
+              <Input placeholder="Digite o título da task" {...register('title', { required: true })} />
+              <Checkbox {...register('completed')}>Realizada?</Checkbox>
+              <Button type="submit" colorScheme="blue" isLoading={isLoading}>Inserir</Button>
+            </Flex>
+          </form>
+        </Box>
+        <hr />
+        <ul>
+          {tasks?.map((task: Task) => (
+            <li key={task.id}>{task.title}</li>
+          ))}
+        </ul>
+      </Container>
+    </>
+  )
+}
+```
+
+Podemos isolar o formulário em um componente para facilitar a reutilização
+```tsx
+import { Input } from "@chakra-ui/input"
+import { Checkbox } from "@chakra-ui/checkbox"
+import { Button } from "@chakra-ui/button"
+import { useForm } from 'react-hook-form'
+import { useCreateTask } from "../../hooks/mutations/mutationTasks"
+import { Heading, Flex, Box } from "@chakra-ui/layout"
+
+export default function TaskForm() {
+  interface TaskForm {
+    title: string
+    completed: boolean
+  }
+
+  const {
+    reset,
+    register,
+    handleSubmit
+  } = useForm<TaskForm>()
+
+  const { mutate, isLoading, isError } = useCreateTask()
+
+  const onSubmit = async (data: TaskForm) => {
+    mutate({
+      title: data.title,
+      completed: data.completed
+    })
+    if (!isError) {
+      reset()
+    }
+  }
+
+  return (
+    <Box my={3}>
+      <Heading size="md" mt={3}>
+        Inserir nova task
+      </Heading>
+
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Flex gap={3}>
+          <Input placeholder="Digite o título da task" {...register('title', { required: true })} />
+          <Checkbox {...register('completed')}>Realizada?</Checkbox>
+          <Button type="submit" colorScheme="blue" isLoading={isLoading}>Inserir</Button>
+        </Flex>
+      </form>
+    </Box>
+  )
+}
+```
+
+E na Home vamos importar o componente
+```tsx
+import { Container, Heading } from "@chakra-ui/layout"
+import Header from "../../components/header"
+
+import { useTasks } from "../../hooks/queries/useTasks"
+import { Task } from "../../interfaces/task"
+import TaskForm from "../../components/taskForm"
+
+
+export default function Home() {
+  const { data: tasks } = useTasks()
+
+
+  return (
+    <>
+      <Header />
+      <Container>
+        <Heading mt={5}>
+          Lista de tasks
+        </Heading>
+        <hr />
+        <TaskForm />
+        <hr />
+        <ul>
+          {tasks?.map((task: Task) => (
+            <li key={task.id}>{task.title}</li>
+          ))}
+        </ul>
+      </Container>
+    </>
+  )
+}
+```
+
+Vamos criar um componente taskItem para exibir as tasks
+```tsx
+import { Box, Flex, Text } from "@chakra-ui/react"
+import { Task } from "../../interfaces/task"
+
+interface TaskItemProps {
+  task: Task
+}
+
+export default function TaskItem({ task }: TaskItemProps) {
+  return (
+    <Box as="li" bg="gray.800" p={3} borderRadius="md" my={2}>
+      <Flex align="center" justify="space-between">
+        <Text>{task.title}</Text>
+        <Text>{task.completed ? "Realizada" : "Pendente"}</Text>
+      </Flex>
+    </Box>
+  )
+}
+```
+
+E na Home vamos importar o componente
+```tsx
+import { Container, Heading } from "@chakra-ui/layout"
+import Header from "../../components/header"
+
+import { useTasks } from "../../hooks/queries/useTasks"
+import { Task } from "../../interfaces/task"
+import TaskForm from "../../components/taskForm"
+import TaskItem from "../../components/taskItem"
+
+
+export default function Home() {
+  const { data: tasks } = useTasks()
+
+
+  return (
+    <>
+      <Header />
+      <Container>
+        <Heading mt={5}>
+          Lista de tasks
+        </Heading>
+        <hr />
+        <TaskForm />
+        <hr />
+        {tasks?.map((task: Task) => ( <TaskItem key={task.id} task={task} /> ))}
+      </Container>
+    </>
+  )
+}
+```
+
+Agora vamos criar o hook `useUpdateTask` no arquivo de `mutations` para marcar uma task como concluída
+```tsx
+const updateTask = (task: Task) => api.put<Task>(`/task/${task.id}`, task)
+
+export const useUpdateTask = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation((task: Task) => updateTask(task), {
+    onSuccess: () => {
+      queryClient.invalidateQueries('tasks')
+    }
+  })
+}
+```
+
+No componente `TaskItem` vamos adicionar um botão para marcar a task como concluída
+```tsx
+import { Box, Button, Flex, Text } from "@chakra-ui/react"
+import { Task } from "../../interfaces/task"
+import { useUpdateTask } from "../../hooks/mutations/mutationTasks"
+
+interface TaskItemProps {
+  task: Task
+}
+
+export default function TaskItem({ task }: TaskItemProps) {
+  const { mutate, isLoading } = useUpdateTask()
+
+  const handleUpdateTask = (task: Task) => {
+    mutate({
+      title: task.title,
+      completed: !task.completed
+    })
+  }
+
+  return (
+    <Box bg="gray.100" p={3} borderRadius="md" my={2}>
+      <Flex align="center" justify="space-between">
+        <Text>{task.title}</Text>
+        <Button colorScheme={task.completed ? 'green' : 'red'}
+          onClick={() => { handleUpdateTask(task) }}
+          isLoading={isLoading}>{task.completed ? "Realizada" : "Pendente"}</Button>
+      </Flex>
+    </Box>
+  )
+}
+```
+
+Podemos criar um `mutation` para excluir uma task
+```tsx
+const deleteTask = (id: number) => api.delete<Task>(`/task/${id}`)
+
+export const useDeleteTask = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation((id: number) => deleteTask(id), {
+    onSuccess: () => {
+      queryClient.invalidateQueries('tasks')
+    }
+  })
+}
+```
+
+E no componente `TaskItem` vamos adicionar um botão para excluir a task
+```tsx
+import { Box, Button, Grid, Text } from "@chakra-ui/react"
+import { Task } from "../../interfaces/task"
+import { useDeleteTask, useUpdateTask } from "../../hooks/mutations/mutationTasks"
+
+interface TaskItemProps {
+  task: Task
+}
+
+export default function TaskItem({ task }: TaskItemProps) {
+  const { mutate: mutateUpdate, isLoading: isLoadingUpdate } = useUpdateTask()
+
+  const handleUpdateTask = (task: Task) => {
+    mutateUpdate({
+      id: task.id,
+      title: task.title,
+      completed: !task.completed
+    })
+  }
+
+  const { mutate: mutateDelete, isLoading: isLoadingDelete } = useDeleteTask()
+
+  const handleDeleteTask = (id: number) => {
+    mutateDelete(id)
+  }
+
+  return (
+    <Box bg="gray.100" p={3} borderRadius="md" my={2}>
+      <Grid templateColumns='3fr 1fr 1fr' gap={3} alignItems='center'>
+        <Text>{task.title}</Text>
+        <Button colorScheme={task.completed ? 'green' : 'red'}
+          onClick={() => { handleUpdateTask(task) }}
+          isLoading={isLoadingUpdate}>{task.completed ? "Realizada" : "Pendente"}</Button>
+        <Button colorScheme="red" onClick={() => { handleDeleteTask(task.id) }} isLoading={isLoadingDelete}>Excluir</Button>
+      </Grid>
+    </Box>
+  )
+}
+```
+
+Com isso nosso CRUD básico fica completo, ainda podemos realizar alguns ajustes visuais e melhorar a aplicação
