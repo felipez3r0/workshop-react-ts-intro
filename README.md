@@ -9,6 +9,7 @@ Para visualizar o projeto navegue pelas branchs que representam cada etapa do de
 
 - [Etapa 1 - Configuração do projeto](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa1-configuracao)
 - [Etapa 2 - Organizando o projeto](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa2-organizando)
+- [Etapa 3 - Criando o Header](https://github.com/felipez3r0/workshop-react-ts-intro/tree/etapa3-header)
 
 ## Passo a passo
 
@@ -150,3 +151,77 @@ export default routes
 ```
 
 Isso vai fornecer as configurações básicas para começarmos a desenvolver a aplicação
+
+### Etapa 3 - Criando o Header
+
+Vamos criar o componente `Header` na pasta `components`
+```tsx
+import { Box, Flex, Text } from "@chakra-ui/react"
+import { Link } from "react-router-dom"
+
+export default function Header() {
+  return (
+    <Box as="header" bg="gray.800" w="100%" h="20">
+      <Flex
+        as="nav"
+        w="100%"
+        h="100%"
+        maxW={1200}
+        mx="auto"
+        align="center"
+        justify="space-between"
+        px="6"
+      >
+        <Text fontSize="3xl" fontWeight="bold" color="white">
+          Workshop
+        </Text>
+        <Flex as="ul" listStyleType="none">
+          <Box as="li" mx="4">
+            <Link to="/">
+              <Text color="white">Home</Text>
+            </Link>
+          </Box>
+          <Box as="li" mx="4">
+            <Link to="/about">
+              <Text color="white">Sobre o projeto</Text>
+            </Link>
+          </Box>
+        </Flex>
+      </Flex>
+    </Box>
+  )
+}
+```
+
+Agora vamos importar o componente `Header` no arquivo `index.tsx` da Home e da About
+```tsx
+import { Container } from "@chakra-ui/layout"
+import Header from "../../components/header"
+
+export default function Home() {
+  return (
+    <>
+    <Header />
+    <Container>
+      <h1>Home</h1>
+    </Container>
+    </>
+  )
+}
+```
+
+```tsx
+import { Container } from "@chakra-ui/layout"
+import Header from "../../components/header"
+
+export default function About() {
+  return (
+    <>
+    <Header />
+    <Container>
+      <h1>About</h1>
+    </Container>
+    </>
+  )
+}
+```
